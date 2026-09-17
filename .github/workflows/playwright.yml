@@ -1,0 +1,45 @@
+name: Shared Playwright CI
+
+on:
+  workflow_call:
+    inputs:
+      team:
+        description: Name used to identify the test run
+        required: true
+        type: string
+      demo_failure:
+        description: Intentionally fail one demo test
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Playwright / ${{ inputs.team }}
+    runs-on: [self-hosted, linux, x64, qa-playwright]
+    timeout-minutes: 20
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+    env:
+      CI: "true"
+      DEMO_FAIL: ${{ inputs.demo_failure }}
+    steps:
+      - name: Check out team repository
+        uses: actions/checkout@v4
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run Playwright tests
+        run: npx playwright test
+      - name: Upload report and traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ inputs.team }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 7
