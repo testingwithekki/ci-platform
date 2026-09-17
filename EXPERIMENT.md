@@ -39,6 +39,7 @@ The lab was designed to be disposable. Record completion only after checking eac
 | Step | Evidence |
 | --- | --- |
 | Runner service stopped | Stopped on the VM after the recovery run |
+| Team workflows disabled | GitHub's workflow API returned `disabled_manually` for all three repositories after VM disposal. Past run pages remain visible. |
 | Organization runner removed from GitHub | Pending GitHub reauthentication |
 | Terraform destroy completed; VM, boot disk, VPC, subnet, firewall, and service account absent | At about 12:07 UTC, Terraform reported `0 added, 0 changed, 5 destroyed`; `terraform state list` returned no resources. The VM's attached boot disk was deleted with the instance. |
 | Billing disabled for `testingwithekki-qa-ci-lab` | `gcloud billing projects unlink` returned `billingEnabled: false` and an empty billing account name. |
