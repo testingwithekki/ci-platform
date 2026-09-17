@@ -30,7 +30,7 @@ The runner was persistent and shared across repositories. Restricting repository
 
 ## Cost
 
-The Google Cloud billing account had developer credits applicable to the dedicated lab project. A monthly IDR 100,000 budget alerted at 50%, 90%, and 100%; it was not a hard cap. The actual billed amount and credit application were not available immediately after the experiment because billing reports lag. This log does not claim a final cost until the billing report shows the measured period.
+The Google Cloud billing account had available Google Developer Program credits whose listed usage scope includes Google Cloud Platform. A monthly IDR 100,000 budget alerted at 50%, 90%, and 100%; it was not a hard cap. On 2026-09-18, the budget page showed **Rp161.33** of project spend, with "No credits used". The project-filtered report showed about Rp55 for Compute Engine and Rp106 for Networking on 2026-09-17. These are the amounts visible at that check, not a final invoice; later usage and credit entries may still appear. The billing report is private to the billing account.
 
 ## Disposal
 
@@ -40,9 +40,10 @@ The lab was designed to be disposable. Record completion only after checking eac
 | --- | --- |
 | Runner service stopped | Stopped on the VM after the recovery run |
 | Team workflows disabled | GitHub's workflow API returned `disabled_manually` for all three repositories after VM disposal. Past run pages remain visible. |
-| Organization runner removed from GitHub | Pending GitHub reauthentication |
+| Organization runner retained offline | GitHub's runner list showed `qa-ci-runner` as **Offline** on 2026-09-18. Retained at the owner's request; its VM and disk no longer exist. |
 | Terraform destroy completed; VM, boot disk, VPC, subnet, firewall, and service account absent | At about 12:07 UTC, Terraform reported `0 added, 0 changed, 5 destroyed`; `terraform state list` returned no resources. The VM's attached boot disk was deleted with the instance. |
 | Billing disabled for `testingwithekki-qa-ci-lab` | `gcloud billing projects unlink` returned `billingEnabled: false` and an empty billing account name. |
 | Dedicated project shut down | `gcloud projects delete` succeeded; `gcloud projects describe` returned `lifecycleState: DELETE_REQUESTED` at about 12:09 UTC. Google Cloud permits recovery for a limited period. |
+| Lab budget alert retained | The IDR 100,000 alert remains scoped to project `23565600027` at the owner's request. The separate account-wide budget was untouched. |
 
-No downloadable Google API key was created. The four public GitHub repositories remain as the portfolio. The runner group can be deleted after the runner is removed.
+No downloadable Google API key was created. The four public GitHub repositories remain as the portfolio. The restricted `qa-playwright` runner group and offline runner registration remain for reference. All three team workflows are disabled, so they will not queue new jobs until intentionally re-enabled.
