@@ -40,10 +40,10 @@ The lab was designed to be disposable. Record completion only after checking eac
 | --- | --- |
 | Runner service stopped | Stopped on the VM after the recovery run |
 | Team workflows disabled | GitHub's workflow API returned `disabled_manually` for all three repositories after VM disposal. Past run pages remain visible. |
-| Organization runner retained offline | GitHub's runner list showed `qa-ci-runner` as **Offline** on 2026-09-18. Retained at the owner's request; its VM and disk no longer exist. |
+| Organization runner retained offline | GitHub's runner list showed `qa-ci-runner` as **Offline** on 2026-09-18. Retained at the owner's request; its VM and disk no longer exist. [GitHub automatically removes standard runners](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/remove-runners) after more than 14 days without a connection. |
 | Terraform destroy completed; VM, boot disk, VPC, subnet, firewall, and service account absent | At about 12:07 UTC, Terraform reported `0 added, 0 changed, 5 destroyed`; `terraform state list` returned no resources. The VM's attached boot disk was deleted with the instance. |
 | Billing disabled for `testingwithekki-qa-ci-lab` | `gcloud billing projects unlink` returned `billingEnabled: false` and an empty billing account name. |
 | Dedicated project shut down | `gcloud projects delete` succeeded; `gcloud projects describe` returned `lifecycleState: DELETE_REQUESTED` at about 12:09 UTC. Google Cloud permits recovery for a limited period. |
 | Lab budget alert retained | The IDR 100,000 alert remains scoped to project `23565600027` at the owner's request. The separate account-wide budget was untouched. |
 
-No downloadable Google API key was created. The four public GitHub repositories remain as the portfolio. The restricted `qa-playwright` runner group and offline runner registration remain for reference. All three team workflows are disabled, so they will not queue new jobs until intentionally re-enabled.
+No downloadable Google API key was created. The four public GitHub repositories remain as the portfolio. The restricted `qa-playwright` runner group remains; GitHub will eventually remove the offline runner registration. All three team workflows are disabled, so they will not queue new jobs until intentionally re-enabled. A future run needs a newly provisioned VM and runner registration.
