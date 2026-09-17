@@ -1,6 +1,6 @@
 # CI platform
 
-This repository owns the shared Playwright workflow and the Google Cloud VM definition. Team repositories call `.github/workflows/playwright.yml`; they do not duplicate the test execution steps.
+This repository owns the shared Playwright workflow and the Google Cloud VM definition. Team repositories call `.github/workflows/playwright.yml`; they do not duplicate the test execution steps. The three small suites exercise [Playwright's TodoMVC demo](https://demo.playwright.dev/todomvc/).
 
 The runner must be registered at the **organization** level and carry the label `qa-playwright`. For the first milestone, run one runner on one VM. Each GitHub Actions runner processes one job at a time, so simultaneous team runs visibly queue.
 

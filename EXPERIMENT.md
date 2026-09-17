@@ -8,15 +8,15 @@ Start the VM and confirm the organization runner is **online**. Run each team wo
 
 | Team | Run link | Queue time | Run time | Result |
 | --- | --- | ---: | ---: | --- |
-| Checkout | | | | |
-| Search | | | | |
-| Profile | | | | |
+| Create | | | | |
+| Filter | | | | |
+| Persistence | | | | |
 
 GitHub Actions exposes job `created_at`, `started_at`, and `completed_at` timestamps in the jobs API. Compute `queue time = started_at - created_at` and `run time = completed_at - started_at`. For a small sample, the run page timestamps are enough to demonstrate the behavior.
 
 ## Run 2: contention
 
-Trigger checkout and search close together while the single runner is idle. Record which job starts and which waits. Repeat with all three teams. The run order is controlled by GitHub's scheduler; do not claim strict first-in-first-out fairness from this demo.
+Trigger create and filter close together while the single runner is idle. Record which job starts and which waits. Repeat with all three teams. The run order is controlled by GitHub's scheduler; do not claim strict first-in-first-out fairness from this demo.
 
 | Number of concurrent requests | Longest queue time | Total elapsed time | Notes |
 | ---: | ---: | ---: | --- |
@@ -26,7 +26,7 @@ Trigger checkout and search close together while the single runner is idle. Reco
 
 ## Run 3: failure recovery
 
-Trigger checkout with **Demonstrate failure** enabled. Verify the failed run retains an HTML report, screenshot, and trace. Then run profile and verify the runner accepts another job. Record links to both runs.
+Trigger create with **Demonstrate failure** enabled. Verify the failed run retains an HTML report, screenshot, and trace. Then run persistence and verify the runner accepts another job. Record links to both runs.
 
 ## Cost and decision
 
