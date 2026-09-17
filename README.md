@@ -7,3 +7,5 @@ The runner must be registered at the **organization** level and carry the label 
 The workflow is limited to `contents: read`, runs in a pinned Playwright container image, has a timeout, and uploads the report even when tests fail. The team repositories are public for this portfolio project. Their self-hosted workflows run only for trusted pushes to `main` or manual dispatch, with no pull-request trigger. Limit write access and protect `main`; permit only the three team repositories to use the runner group. Containerization makes browser dependencies repeatable, but it does not make a persistent runner safe for untrusted code.
 
 Provisioning instructions are in [`infra/README.md`](infra/README.md).
+
+The [experiment log](EXPERIMENT.md) contains the live run links, queue measurements, failure artifact evidence, and teardown record.

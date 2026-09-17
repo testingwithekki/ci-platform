@@ -1,48 +1,47 @@
-# CI experiment log
+# Shared runner experiment
 
-The story to demonstrate is how three QA teams share one runner, and what becomes a bottleneck. Keep the test suites small so the measurements describe the CI design rather than application complexity.
+On 2026-09-17, three public QA team repositories ran small Playwright TodoMVC suites through one organization runner. The purpose was to measure CI queueing, artifact retention, recovery after a test failure, and teardown. All times below are UTC.
 
-## Run 1: baseline
+## Setup
 
-Start the VM and confirm the organization runner is **online**. Run each team workflow once. Record the GitHub Actions run link, job start and end times, and outcome.
+- Repositories: [team-create](https://github.com/testingwithekki/team-create), [team-filter](https://github.com/testingwithekki/team-filter), and [team-persistence](https://github.com/testingwithekki/team-persistence).
+- One organization runner named `qa-ci-runner` in restricted group `qa-playwright`. The group allowed only those three repositories and the central workflow in this repository.
+- Google Cloud VM: `e2-standard-2`, Ubuntu 24.04, 30 GB `pd-balanced` boot disk, `us-central1-a`. Terraform created a dedicated VPC, subnet, IAP-only SSH firewall, and service account with no project roles. The VM had a six-hour automatic stop.
+- The reusable workflow ran in `mcr.microsoft.com/playwright:v1.63.0-noble`, uploaded Playwright artifacts even on failure, and retained them for seven days. Team workflows accepted trusted `main` pushes and manual dispatch, with no pull-request trigger.
 
-| Team | Run link | Queue time | Run time | Result |
-| --- | --- | ---: | ---: | --- |
-| Create | | | | |
-| Filter | | | | |
-| Persistence | | | | |
+## Baseline and queueing
 
-GitHub Actions exposes job `created_at`, `started_at`, and `completed_at` timestamps in the jobs API. Compute `queue time = started_at - created_at` and `run time = completed_at - started_at`. For a small sample, the run page timestamps are enough to demonstrate the behavior.
+GitHub's job timestamps are the source for these measurements: queue time is `started_at - created_at`; run time is `completed_at - started_at`. The initial run included a container image pull. The three-run trial was dispatched while the runner was idle, within one second of each other.
 
-## Run 2: contention
+| Trial | Team and run | Created | Started | Completed | Queue | Run | Result |
+| --- | --- | --- | --- | --- | ---: | ---: | --- |
+| Initial | [Create](https://github.com/testingwithekki/team-create/actions/runs/35218691613) | 12:00:25 | 12:00:26 | 12:01:14 | 1 s | 48 s | Passed |
+| Three teams | [Create](https://github.com/testingwithekki/team-create/actions/runs/35218798141) | 12:01:30 | 12:01:31 | 12:01:45 | 1 s | 14 s | Passed |
+| Three teams | [Filter](https://github.com/testingwithekki/team-filter/actions/runs/35218798671) | 12:01:30 | 12:01:46 | 12:02:00 | 16 s | 14 s | Passed |
+| Three teams | [Persistence](https://github.com/testingwithekki/team-persistence/actions/runs/35218799237) | 12:01:31 | 12:02:01 | 12:02:15 | 30 s | 14 s | Passed |
 
-Trigger create and filter close together while the single runner is idle. Record which job starts and which waits. Repeat with all three teams. The run order is controlled by GitHub's scheduler; do not claim strict first-in-first-out fairness from this demo.
+All four jobs reported `runner_name: qa-ci-runner` and `runner_group_name: qa-playwright`. The three-team trial took 45 seconds from the first job's creation to the last job's completion. It demonstrates that one runner serializes jobs; it does not prove a guaranteed first-in-first-out scheduling policy. For these tiny suites, a 30-second worst queue was tolerable. A second runner would become useful if concurrent requests or suite duration increased enough that this wait exceeded the team's target.
 
-| Number of concurrent requests | Longest queue time | Total elapsed time | Notes |
-| ---: | ---: | ---: | --- |
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
+## Failure and recovery
 
-## Run 3: failure recovery
+The [intentional Create failure](https://github.com/testingwithekki/team-create/actions/runs/35218918257) finished with one failed and two passed tests. GitHub retained the HTML report, a failure screenshot, and `trace.zip` in the run artifact. The following [Persistence run](https://github.com/testingwithekki/team-persistence/actions/runs/35218981950) passed on the same runner in 14 seconds. A test failure did not leave the runner unable to accept the next job.
 
-Trigger create with **Demonstrate failure** enabled. Verify the failed run retains an HTML report, screenshot, and trace. Then run persistence and verify the runner accepts another job. Record links to both runs.
+The runner was persistent and shared across repositories. Restricting repository access and using a container reduced exposure, but this design should only accept trusted code from the three teams. Containers do not guarantee isolation from a malicious job on a shared self-hosted runner.
 
-## Cost and decision
+## Cost
 
-Record the VM machine type, region, running hours, boot disk size, network charges, and total billed cost from Google Cloud Billing. Include the period measured. A budget alert is a warning, not a hard spending limit.
+The Google Cloud billing account had developer credits applicable to the dedicated lab project. A monthly IDR 100,000 budget alerted at 50%, 90%, and 100%; it was not a hard cap. The actual billed amount and credit application were not available immediately after the experiment because billing reports lag. This log does not claim a final cost until the billing report shows the measured period.
 
-Conclude with evidence: whether queue time is acceptable for this workload, when a second runner would help, and the security limit of a shared persistent runner. Avoid claiming that the persistent VM is isolated between untrusted teams.
+## Disposal
 
-## Disposal evidence
-
-After all three teams have run and the reports are saved, record the time and evidence for each step:
+The lab was designed to be disposable. Record completion only after checking each service:
 
 | Step | Evidence |
 | --- | --- |
-| Organization runner removed from GitHub | |
-| Terraform destroy completed; VM, disk, VPC, and service account absent | |
-| Billing disabled for `testingwithekki-qa-ci-lab` | |
-| Dedicated project shut down (30-day recovery period) | |
+| Runner service stopped | Stopped on the VM after the recovery run |
+| Organization runner removed from GitHub | Pending GitHub reauthentication |
+| Terraform destroy completed; VM, boot disk, VPC, subnet, firewall, and service account absent | At about 12:07 UTC, Terraform reported `0 added, 0 changed, 5 destroyed`; `terraform state list` returned no resources. The VM's attached boot disk was deleted with the instance. |
+| Billing disabled for `testingwithekki-qa-ci-lab` | `gcloud billing projects unlink` returned `billingEnabled: false` and an empty billing account name. |
+| Dedicated project shut down | `gcloud projects delete` succeeded; `gcloud projects describe` returned `lifecycleState: DELETE_REQUESTED` at about 12:09 UTC. Google Cloud permits recovery for a limited period. |
 
-No downloadable Google API key is created for the lab. Keep the public GitHub repositories as the portfolio; dispose only of the lab runner, its GitHub runner group, and the dedicated Google Cloud project.
+No downloadable Google API key was created. The four public GitHub repositories remain as the portfolio. The runner group can be deleted after the runner is removed.
