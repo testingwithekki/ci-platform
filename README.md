@@ -4,6 +4,6 @@ This repository owns the shared Playwright workflow and the Google Cloud VM defi
 
 The runner must be registered at the **organization** level and carry the label `qa-playwright`. For the first milestone, run one runner on one VM. Each GitHub Actions runner processes one job at a time, so simultaneous team runs visibly queue.
 
-The workflow is limited to `contents: read`, runs in a pinned Playwright container image, has a timeout, and uploads the report even when tests fail. Keep team repositories private and limit who can modify workflows. Containerization makes browser dependencies repeatable, but it does not make a persistent runner safe for untrusted code.
+The workflow is limited to `contents: read`, runs in a pinned Playwright container image, has a timeout, and uploads the report even when tests fail. The team repositories are public for this portfolio project. Their self-hosted workflows run only for trusted pushes to `main` or manual dispatch, with no pull-request trigger. Limit write access and protect `main`; permit only the three team repositories to use the runner group. Containerization makes browser dependencies repeatable, but it does not make a persistent runner safe for untrusted code.
 
 Provisioning instructions are in [`infra/README.md`](infra/README.md).
