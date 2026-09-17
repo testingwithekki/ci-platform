@@ -42,6 +42,13 @@ resource "google_compute_instance" "runner" {
   zone         = var.zone
   tags         = ["qa-ci-runner"]
 
+  scheduling {
+    max_run_duration {
+      seconds = 21600
+    }
+    instance_termination_action = "STOP"
+  }
+
   boot_disk {
     initialize_params {
       image = "ubuntu-os-cloud/ubuntu-2404-lts-amd64"

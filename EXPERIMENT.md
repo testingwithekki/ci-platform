@@ -32,4 +32,17 @@ Trigger create with **Demonstrate failure** enabled. Verify the failed run retai
 
 Record the VM machine type, region, running hours, boot disk size, network charges, and total billed cost from Google Cloud Billing. Include the period measured. A budget alert is a warning, not a hard spending limit.
 
-Conclude with evidence: whether queue time is acceptable for this workload, when a second runner would help, and why disposable runners would be the next security improvement. Avoid claiming that the persistent VM is isolated between untrusted teams.
+Conclude with evidence: whether queue time is acceptable for this workload, when a second runner would help, and the security limit of a shared persistent runner. Avoid claiming that the persistent VM is isolated between untrusted teams.
+
+## Disposal evidence
+
+After all three teams have run and the reports are saved, record the time and evidence for each step:
+
+| Step | Evidence |
+| --- | --- |
+| Organization runner removed from GitHub | |
+| Terraform destroy completed; VM, disk, VPC, and service account absent | |
+| Billing disabled for `testingwithekki-qa-ci-lab` | |
+| Dedicated project shut down (30-day recovery period) | |
+
+No downloadable Google API key is created for the lab. Keep the public GitHub repositories as the portfolio; dispose only of the lab runner, its GitHub runner group, and the dedicated Google Cloud project.
