@@ -25,7 +25,7 @@ Connect using IAP:
 gcloud compute ssh qa-ci-runner --project=YOUR_GCP_PROJECT --zone=YOUR_ZONE --tunnel-through-iap
 ```
 
-On the VM, install Docker using [Docker's Ubuntu instructions](https://docs.docker.com/engine/install/ubuntu/). Create a dedicated non-root runner account, grant it Docker access, then follow GitHub's organization **New runner** page to download and configure the current Linux x64 runner. Add label `qa-playwright` during registration. Configure it as a service so it starts with the VM. Only administrators should control the runner account; Docker access is privileged.
+On the VM, install Docker using [Docker's Ubuntu instructions](https://docs.docker.com/engine/install/ubuntu/). Create a dedicated non-root runner account, grant it Docker access, then follow GitHub's organization **New runner** page to download and configure the current Linux x64 runner. Select the `qa-playwright` runner group and add label `qa-playwright` during registration. Configure it as a service so it starts with the VM. Only administrators should control the runner account; Docker access is privileged.
 
 ## Cost control
 

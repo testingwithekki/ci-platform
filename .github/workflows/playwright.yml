@@ -19,7 +19,9 @@ permissions:
 jobs:
   test:
     name: Playwright / ${{ inputs.team }}
-    runs-on: [self-hosted, linux, x64, qa-playwright]
+    runs-on:
+      group: qa-playwright
+      labels: [self-hosted, linux, x64, qa-playwright]
     timeout-minutes: 20
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
