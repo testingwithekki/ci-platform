@@ -2,6 +2,23 @@
 
 Status: design for the next build. The earlier single-VM experiment is complete and its VM and project were destroyed. Nothing in this document is deployed yet.
 
+## Keep v1 and v2 separate
+
+The completed experiment remains reproducible from its existing workflow and run links. Build v2 beside it:
+
+| Layer | Completed v1 | Proposed v2 |
+| --- | --- | --- |
+| Central reusable workflow | `.github/workflows/playwright.yml` | `.github/workflows/playwright-v2.yml` |
+| Each team caller workflow | `.github/workflows/playwright.yml` | `.github/workflows/qa-platform-v2.yml` |
+| Organization runner group and label | `qa-playwright` | `qa-platform-v2` |
+| Runner machine | One persistent VM, now destroyed | One-job VMs named for the run, maximum two active |
+| Google Cloud project | `testingwithekki-qa-ci-lab`, deleted | New dedicated v2 project; choose its globally unique ID when provisioning |
+| Report storage | GitHub Actions artifact, seven days | GitHub Actions artifact plus private Cloud Storage archive |
+
+The v1 workflows stay disabled. Start the v2 caller workflows with `workflow_dispatch` only; enable trusted `main` pushes after the end-to-end demo works. The new runner group allows only the three team repositories and jobs directly defined by `playwright-v2.yml`. The source repository does not need runner access. Keep v2's workflow reference and the group's selected-workflow reference in sync. During development they can target `main`; before calling the setup stable, pin a reviewed revision and update both references together.
+
+No v2 workflow or runner group should be created merely to publish this plan. The next change will add separate workflow files, and the cloud resources will follow after the design and cost checks.
+
 ## Goal
 
 Keep three team-owned Playwright repositories and one central CI workflow. Give each CI job a clean runner, keep reports after that runner disappears, and show queueing, concurrency, failure recovery, cleanup, and cost with verifiable run links. Use synthetic TodoMVC data for the public demonstration.
@@ -75,11 +92,20 @@ The controller deletes a VM only after the GitHub job reaches a terminal state. 
 
 ## Build sequence
 
-1. Add the private bucket, lifecycle, Workload Identity Federation, and scoped report writer. Validate upload and download with one team on a temporary runner.
-2. Version the reusable workflow contract, add explicit team configuration, and retain reports for success and failure.
+1. Add the separate v2 workflow files with manual triggers, a versioned contract, explicit team configuration, and the existing GitHub artifact upload. Keep the v1 files untouched.
+2. Add the private bucket, lifecycle, Workload Identity Federation, and scoped report writer in a new Google Cloud project. Validate upload and download with one team on a temporary one-job runner.
 3. Implement the verified webhook receiver and idempotent VM lifecycle with a one-runner capacity limit.
 4. Add the orphan reconciler, second capacity slot, and three-team concurrency experiment.
-5. Publish a sanitized architecture diagram, timings, costs, failure evidence, and teardown record.
+5. Publish a sanitized architecture diagram, timings, gross cost, credit application, failure evidence, and teardown record. Disable v2 workflows and destroy the v2 project after the demonstration unless a follow-up experiment needs them.
+
+## Build-in-public chapters
+
+1. **Part 1 — One VM, three teams:** the existing experiment, including queueing and disposal.
+2. **Part 2 — Designing the platform:** the v1/v2 boundary, CI contract, threat model, private report storage, and cost controls. This document is the working outline.
+3. **Part 3 — One disposable job:** new v2 workflow, one short-lived runner, report uploaded to GitHub and Cloud Storage, VM deleted.
+4. **Part 4 — Shared capacity without a shared host:** two runner slots, three simultaneous team runs, metrics, failure injection, and orphan cleanup.
+
+Each chapter should show public-safe screenshots and real run links. Never publish webhook signatures, registration tokens, GitHub App private keys, personal test data, billing identifiers, or raw Terraform state.
 
 ## References
 
