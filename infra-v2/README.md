@@ -1,6 +1,6 @@
 # Private report storage and GitHub OIDC
 
-This is the storage and identity slice of QA platform v2. Runner provisioning is a separate slice. The three buckets are private and each team job can create objects only in its own bucket. No Google service account key is needed in GitHub.
+This is the storage and identity slice of QA platform v2, plus the dedicated runner network, service account, and registration secret. Runner VM provisioning is described in `../runner-v2/README.md`. The three buckets are private and each team job can create objects only in its own bucket. No Google service account key is needed in GitHub.
 
 1. Use the existing `testingwithekki` Google Cloud project, which is already linked to the billing account. Check existing resources and set a project-scoped budget alert before running jobs.
 2. Install Terraform and authenticate to Google Cloud with Application Default Credentials.
