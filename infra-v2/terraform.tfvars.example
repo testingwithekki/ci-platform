@@ -1,0 +1,7 @@
+project_id      = "testingwithekki"
+github_owner_id = "330211622"
+github_repository_ids = {
+  create      = "1373784160"
+  filter      = "1373784260"
+  persistence = "1373784386"
+}
