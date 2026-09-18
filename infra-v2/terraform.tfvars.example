@@ -1,4 +1,4 @@
-project_id      = "YOUR_DEDICATED_PROJECT_ID"
+project_id      = "testingwithekki"
 github_owner_id = "330211622"
 github_repository_ids = {
   create      = "1373784160"
