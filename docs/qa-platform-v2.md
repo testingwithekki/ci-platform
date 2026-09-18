@@ -1,6 +1,6 @@
 # QA platform v2: short-lived runners and private reports
 
-Status: design for the next build. The earlier single-VM experiment is complete and its VM and project were destroyed. Nothing in this document is deployed yet.
+Status: implementation in progress. The earlier single-VM experiment is complete and its VM and project were destroyed. The separate v2 workflow and report-storage Terraform files are being built beside it; live deployment and end-to-end verification are tracked separately.
 
 ## Keep v1 and v2 separate
 
@@ -32,7 +32,7 @@ Keep three team-owned Playwright repositories and one central CI workflow. Give 
 | GitHub Actions | Job queue, run status, logs, short-lived report artifacts, and team workflow access. |
 | Google Cloud controller | Validated job events, capacity limit, VM creation, and orphan cleanup. |
 | One-job Compute Engine VMs | Running exactly one Playwright job, then terminating. |
-| Private Cloud Storage bucket | Longer-lived reports and traces, separated by team, run ID, and attempt. |
+| Three private Cloud Storage buckets | Longer-lived reports and traces, with each team restricted to its own bucket. |
 
 Cloud Storage is Google's object-storage counterpart to Amazon S3. The runner VM is execution capacity, not report storage.
 
@@ -58,18 +58,19 @@ The job container uses a versioned Playwright image. A new VM downloads the imag
 - Team-specific non-secret values use repository or environment variables. Test credentials use team-scoped GitHub secrets, passed by explicit name to the reusable workflow. No `.env` or Google service-account key is committed to a repository.
 - The controller uses a GitHub App installation with only the organization runner and Actions permissions required for its work. Its private key and the webhook HMAC secret live in Google Secret Manager.
 - The GitHub webhook receiver verifies `X-Hub-Signature-256` before creating resources, then validates the organization, repository ID, workflow identity, event action, and runner labels. Delivery IDs and run IDs make retries idempotent.
-- CI jobs use GitHub OIDC and Google Workload Identity Federation for write access to report storage. Trust is restricted to the three caller repositories and approved refs. The runner VM service account does not need project-wide permissions.
+- CI jobs use GitHub OIDC and Google Workload Identity Federation for write access to report storage. Trust is restricted by numeric organization and repository IDs, `main`, and the central reusable workflow. The runner VM service account does not need project-wide permissions.
 - The public TodoMVC demo uses synthetic data. For a future application under test, each run creates uniquely named fixtures and removes them in cleanup; removing a VM never substitutes for application-data cleanup.
 
 ## Report storage
 
-Each run uploads `playwright-report/` and `test-results/` to GitHub Actions, including on test failure. The longer-lived copy is an archive in a private Cloud Storage bucket under:
+Each run uploads `playwright-report/` and `test-results/` to GitHub Actions, including on test failure. The longer-lived copy is in a separate private Cloud Storage bucket for each team under:
 
 ```text
-qa-reports/{team}/{github_run_id}/{github_run_attempt}/report.zip
+gs://{team-bucket}/{team}/{github_run_id}/{github_run_attempt}/playwright-report/
+gs://{team-bucket}/{team}/{github_run_id}/{github_run_attempt}/test-results/
 ```
 
-The bucket uses uniform bucket-level access, public-access prevention, and a lifecycle deletion rule. Start with 30-day Cloud Storage retention and seven-day GitHub artifact retention. A future portal can index run metadata and provide authenticated downloads. It does not need to be part of the first end-to-end demonstration.
+Each bucket uses uniform bucket-level access, public-access prevention, and a lifecycle deletion rule. Start with 30-day Cloud Storage retention and seven-day GitHub artifact retention. A future portal can index run metadata and provide authenticated downloads. It does not need to be part of the first end-to-end demonstration.
 
 The controller deletes a VM only after the GitHub job reaches a terminal state. Normal completion includes an artifact-upload result. If the VM fails before upload, the run is marked failed and the controller retains enough remote logs to diagnose startup or runner failure. A scheduled reconciler removes the VM after a maximum age even if the completion webhook is missing. Report archives and traces must be reviewed for credentials or personal data before granting access.
 

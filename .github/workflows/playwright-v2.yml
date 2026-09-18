@@ -1,0 +1,75 @@
+name: QA platform v2 / shared Playwright job
+
+on:
+  workflow_call:
+    inputs:
+      team:
+        required: true
+        type: string
+      gcp_project_id:
+        required: true
+        type: string
+      wif_provider:
+        required: true
+        type: string
+      report_bucket:
+        required: true
+        type: string
+      demo_failure:
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    name: Playwright / ${{ inputs.team }}
+    runs-on:
+      group: qa-platform-v2
+      labels: [self-hosted, linux, x64, qa-platform-v2]
+    timeout-minutes: 20
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+    env:
+      CI: "true"
+      DEMO_FAIL: ${{ inputs.demo_failure }}
+    steps:
+      - name: Check out team repository
+        uses: actions/checkout@v4
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run Playwright tests
+        run: npx playwright test
+      - name: Upload GitHub report and traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ inputs.team }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Authenticate for private report archive
+        if: ${{ !cancelled() }}
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ inputs.gcp_project_id }}
+          workload_identity_provider: ${{ inputs.wif_provider }}
+      - name: Archive HTML report in Cloud Storage
+        if: ${{ !cancelled() }}
+        uses: google-github-actions/upload-cloud-storage@v3
+        with:
+          path: playwright-report
+          destination: ${{ inputs.report_bucket }}/${{ inputs.team }}/${{ github.run_id }}/${{ github.run_attempt }}/playwright-report
+          parent: false
+      - name: Archive traces in Cloud Storage
+        if: ${{ !cancelled() }}
+        uses: google-github-actions/upload-cloud-storage@v3
+        with:
+          path: test-results
+          destination: ${{ inputs.report_bucket }}/${{ inputs.team }}/${{ github.run_id }}/${{ github.run_attempt }}/test-results
+          parent: false
