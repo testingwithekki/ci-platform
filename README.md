@@ -10,4 +10,6 @@ Provisioning instructions are in [`infra/README.md`](infra/README.md).
 
 The [experiment log](EXPERIMENT.md) contains the live run links, queue measurements, failure artifact evidence, and teardown record.
 
+The [QA platform v2 design](docs/qa-platform-v2.md) describes the next demonstration: one-job runner VMs, a private Cloud Storage report bucket, two-job capacity limit, team-specific configuration, and cleanup checks. It is a design; those resources have not been deployed.
+
 The lab VM and Google Cloud project were disposed on 2026-09-17. The organization runner record remains offline at the owner's request. The three team workflows are disabled until a new trusted runner is provisioned; past Actions runs remain visible.
