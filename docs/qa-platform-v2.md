@@ -1,6 +1,6 @@
 # QA platform v2: short-lived runners and private reports
 
-Status: implementation in progress. The earlier single-VM experiment is complete and its VM and project were destroyed. The separate v2 workflow and report-storage Terraform files are being built beside it; live deployment and end-to-end verification are tracked separately.
+Status: implementation in progress. The earlier single-VM experiment is complete and its VM and project were destroyed. The v2 workflows and report-storage Terraform are merged to `main`, and the restricted `qa-platform-v2` runner group is created. Cloud deployment and end-to-end verification are still pending.
 
 ## Keep v1 and v2 separate
 
@@ -17,7 +17,7 @@ The completed experiment remains reproducible from its existing workflow and run
 
 The v1 workflows stay disabled. Start the v2 caller workflows with `workflow_dispatch` only; enable trusted `main` pushes after the end-to-end demo works. The new runner group allows only the three team repositories and jobs directly defined by `playwright-v2.yml`. The source repository does not need runner access. Keep v2's workflow reference and the group's selected-workflow reference in sync. During development they can target `main`; before calling the setup stable, pin a reviewed revision and update both references together.
 
-No v2 workflow or runner group should be created merely to publish this plan. The next change will add separate workflow files, and the cloud resources will follow after the design and cost checks.
+The v2 workflow files are separate from v1. The runner group admits only the three team repositories and the central v2 workflow on `main`; no v2 runner is registered yet. The callers remain manual while cloud resources and the disposable runner lifecycle are validated.
 
 ## Goal
 
@@ -84,7 +84,7 @@ The controller deletes a VM only after the GitHub job reaches a terminal state. 
 
 ## Acceptance demonstration
 
-1. A trusted push in any of the three public team repositories causes a fresh VM and one successful run. The VM is absent afterward; the GitHub and Cloud Storage reports remain accessible to authorized users.
+1. A manual dispatch in any of the three public team repositories causes a fresh VM and one successful run. The VM is absent afterward; the GitHub and Cloud Storage reports remain accessible to authorized users. Consider trusted `main` push triggers only after the manual demonstration works.
 2. A deliberate test failure produces a failure report and trace. The VM still disappears and a following job succeeds.
 3. Three jobs submitted together use at most two test VMs. Record queue time, VM startup time, test time, total time, and cost per run.
 4. Replayed webhook delivery creates no duplicate VM. A simulated interrupted VM is removed by the reconciler.
@@ -97,7 +97,7 @@ The controller deletes a VM only after the GitHub job reaches a terminal state. 
 2. Add private buckets, lifecycle, Workload Identity Federation, and scoped report writers in the existing `testingwithekki` project. Validate upload and download with one team on a temporary one-job runner.
 3. Implement the verified webhook receiver and idempotent VM lifecycle with a one-runner capacity limit.
 4. Add the orphan reconciler, second capacity slot, and three-team concurrency experiment.
-5. Publish a sanitized architecture diagram, timings, gross cost, credit application, failure evidence, and teardown record. Disable v2 workflows and destroy the v2 project after the demonstration unless a follow-up experiment needs them.
+5. Publish a sanitized architecture diagram, timings, gross cost, credit application, failure evidence, and teardown record. Disable v2 workflows and remove only v2 resources after the demonstration; preserve the existing `testingwithekki` project.
 
 ## Build-in-public chapters
 
