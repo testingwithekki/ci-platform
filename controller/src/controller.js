@@ -13,7 +13,7 @@ export class RunnerController {
   }
 
   async completed(job) {
-    const resources = await this.state.complete(job.id);
+    const resources = await this.state.completeExecution(job.id, job.runnerId);
     if (resources && !this.config.preserveRunners) await this.cloud.cleanup(resources);
     await this.drain();
   }

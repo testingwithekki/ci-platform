@@ -31,6 +31,14 @@ test('accepts the exact trusted runner job', () => {
   const result = classifyWorkflowJob(payload(), config);
   assert.equal(result.accepted, true);
   assert.equal(result.job.id, '123');
+  assert.equal(result.job.runnerId, null);
+});
+
+test('captures the assigned runner on completion', () => {
+  const value = payload();
+  value.action = 'completed';
+  value.workflow_job.runner_id = 789;
+  assert.equal(classifyWorkflowJob(value, config).job.runnerId, '789');
 });
 
 test('rejects another repository even with matching labels', () => {
