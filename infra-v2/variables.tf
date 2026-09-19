@@ -46,3 +46,9 @@ variable "github_runner_group_id" {
   type        = number
   default     = 4
 }
+
+variable "preserve_runners" {
+  description = "Keep completed demo VMs and JIT secrets for manual inspection. Disable for unattended use."
+  type        = bool
+  default     = false
+}

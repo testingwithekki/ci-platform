@@ -43,8 +43,18 @@ export class CloudResources {
       disks: [{ boot: true, autoDelete: true, initializeParams: { sourceImage: 'projects/debian-cloud/global/images/family/debian-12', diskSizeGb: '20', diskType: `zones/${c.zone}/diskTypes/pd-balanced` } }],
       networkInterfaces: [{ subnetwork: c.subnetwork, accessConfigs: [{ name: 'External NAT', type: 'ONE_TO_ONE_NAT' }] }],
       serviceAccounts: [{ email: c.runnerServiceAccount, scopes: ['https://www.googleapis.com/auth/cloud-platform'] }],
-      metadata: { items: [{ key: 'startup-script', value: startup }, { key: 'jit-secret-id', value: jitSecretId }] },
-      scheduling: { maxRunDuration: { seconds: '2700' }, instanceTerminationAction: 'DELETE', provisioningModel: 'STANDARD' },
+      metadata: {
+        items: [
+          { key: 'startup-script', value: startup },
+          { key: 'jit-secret-id', value: jitSecretId },
+          { key: 'preserve-runner', value: String(c.preserveRunners) }
+        ]
+      },
+      scheduling: {
+        maxRunDuration: { seconds: '2700' },
+        instanceTerminationAction: c.preserveRunners ? 'STOP' : 'DELETE',
+        provisioningModel: 'STANDARD'
+      },
       shieldedInstanceConfig: { enableSecureBoot: true, enableVtpm: true, enableIntegrityMonitoring: true },
       deletionProtection: false
     };

@@ -205,6 +205,7 @@ resource "google_cloud_run_v2_service" "controller" {
           RUNNER_SERVICE_ACCOUNT     = google_service_account.runner.email
           RUNNER_SUBNETWORK          = google_compute_subnetwork.runner.self_link
           MAX_RUNNERS                = "2"
+          PRESERVE_RUNNERS           = tostring(var.preserve_runners)
           RUNNER_LABEL               = "qa-platform-v2"
           RECONCILE_AUDIENCE         = "https://qa-v2-runner-controller.internal"
           RECONCILER_SERVICE_ACCOUNT = google_service_account.reconciler.email

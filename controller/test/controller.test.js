@@ -32,3 +32,21 @@ test('starts two jobs and holds the third until capacity is released', async () 
   assert.deepEqual(created, ['1', '2', '3']);
   assert.equal(state.active.size, 2);
 });
+
+test('preservation mode releases capacity without deleting completed runner evidence', async () => {
+  const state = new FakeState(2);
+  let cleanupCalls = 0;
+  const cloud = {
+    async createJitSecret(id) { return `secret-${id}`; },
+    async createRunnerVm() {},
+    async cleanup() { cleanupCalls += 1; }
+  };
+  const github = { async createJitConfig() { return { encoded_jit_config: 'encoded', runner: { id: 1 } }; } };
+  const config = { runnerGroupId: 4, requiredLabel: 'qa-platform-v2', staleAfterMinutes: 55, preserveRunners: true };
+  const controller = new RunnerController({ config, state, cloud, github, logger: { error() {} } });
+
+  await controller.queued({ id: '1', installationId: 88 });
+  await controller.completed({ id: '1' });
+  assert.equal(cleanupCalls, 0);
+  assert.equal(state.active.size, 0);
+});
