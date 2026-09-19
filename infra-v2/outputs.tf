@@ -22,3 +22,21 @@ output "runner_registration_secret" {
   value       = google_secret_manager_secret.registration.id
   description = "Add a short-lived GitHub registration token as a secret version immediately before boot."
 }
+
+output "controller_image_repository" {
+  value       = google_artifact_registry_repository.controller.name
+  description = "Artifact Registry repository for immutable controller images."
+}
+
+output "github_app_secret_names" {
+  value = {
+    private_key = google_secret_manager_secret.github_app_private_key.secret_id
+    webhook     = google_secret_manager_secret.github_webhook_secret.secret_id
+  }
+  description = "Empty secret containers; add values only after creating the GitHub App."
+}
+
+output "controller_url" {
+  value       = var.deploy_controller ? google_cloud_run_v2_service.controller[0].uri : null
+  description = "Webhook base URL after deploy_controller is enabled."
+}
