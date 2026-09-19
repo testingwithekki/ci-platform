@@ -20,7 +20,7 @@ async function readBody(request, maxBytes = 1_000_000) {
 export function createHandler({ config, controller, webhookSecret, verifyReconciler = async () => false, logger = console }) {
   return async (request, response) => {
     try {
-      if (request.method === 'GET' && request.url === '/healthz') return reply(response, 200, { ok: true });
+      if (request.method === 'GET' && request.url === '/readyz') return reply(response, 200, { ok: true });
 
       if (request.method === 'POST' && request.url === '/reconcile') {
         if (!(await verifyReconciler(request.headers.authorization))) return reply(response, 401, { error: 'unauthorized' });
