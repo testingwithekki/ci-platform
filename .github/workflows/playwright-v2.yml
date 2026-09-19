@@ -38,14 +38,14 @@ jobs:
       DEMO_FAIL: ${{ inputs.demo_failure }}
     steps:
       - name: Check out team repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Install locked dependencies
         run: npm ci
       - name: Run Playwright tests
         run: npx playwright test
       - name: Upload GitHub report and traces
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-report-${{ inputs.team }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -66,6 +66,7 @@ jobs:
           path: playwright-report
           destination: ${{ inputs.report_bucket }}/${{ inputs.team }}/${{ github.run_id }}/${{ github.run_attempt }}/playwright-report
           parent: false
+          process_gcloudignore: false
       - name: Archive traces in Cloud Storage
         if: ${{ !cancelled() }}
         uses: google-github-actions/upload-cloud-storage@v3
@@ -73,3 +74,4 @@ jobs:
           path: test-results
           destination: ${{ inputs.report_bucket }}/${{ inputs.team }}/${{ github.run_id }}/${{ github.run_attempt }}/test-results
           parent: false
+          process_gcloudignore: false
