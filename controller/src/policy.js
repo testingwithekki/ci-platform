@@ -26,6 +26,7 @@ export function classifyWorkflowJob(payload, config) {
       repositoryId: payload.repository.id,
       repository: payload.repository.full_name,
       installationId: payload.installation.id,
+      runnerId: Number.isSafeInteger(job.runner_id) ? String(job.runner_id) : null,
       queuedAt: job.created_at ?? new Date().toISOString()
     }
   };
