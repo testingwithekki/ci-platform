@@ -25,6 +25,11 @@ Compute Engine also deletes each VM after 45 minutes. The runner shuts itself
 down after its one job. These independent cleanup paths make leaked capacity
 less likely.
 
+For a supervised demonstration, set `PRESERVE_RUNNERS=true`. Completed VMs then
+stop and remain visible, and their one-use JIT secret containers remain for
+inspection. Return this setting to `false` before treating the lab as an
+unattended platform.
+
 ## GitHub App permissions
 
 Install the app only on the three team repositories. Give it:

@@ -33,6 +33,7 @@ export function loadConfig(env = process.env) {
     subnetwork: required('RUNNER_SUBNETWORK', env),
     machineType: env.RUNNER_MACHINE_TYPE ?? 'e2-standard-2',
     maxRunners,
+    preserveRunners: env.PRESERVE_RUNNERS === 'true',
     requiredLabel: env.RUNNER_LABEL ?? 'qa-platform-v2',
     allowedBranch: env.ALLOWED_BRANCH ?? 'main',
     staleAfterMinutes: Number(env.STALE_AFTER_MINUTES ?? '55'),

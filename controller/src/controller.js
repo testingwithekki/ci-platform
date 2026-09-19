@@ -14,7 +14,7 @@ export class RunnerController {
 
   async completed(job) {
     const resources = await this.state.complete(job.id);
-    if (resources) await this.cloud.cleanup(resources);
+    if (resources && !this.config.preserveRunners) await this.cloud.cleanup(resources);
     await this.drain();
   }
 
@@ -36,8 +36,12 @@ export class RunnerController {
   async reconcile(now = new Date()) {
     const before = new Date(now.getTime() - this.config.staleAfterMinutes * 60_000);
     for (const job of await this.state.staleJobs(before)) {
-      await this.cloud.cleanup(job);
-      await this.state.retry(job.id, 'stale runner lease recovered by reconciler');
+      if (this.config.preserveRunners) {
+        await this.state.complete(job.id);
+      } else {
+        await this.cloud.cleanup(job);
+        await this.state.retry(job.id, 'stale runner lease recovered by reconciler');
+      }
     }
     await this.drain();
   }
