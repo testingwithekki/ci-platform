@@ -52,7 +52,7 @@ export class RunnerController {
       installationId: job.installationId,
       runnerGroupId: this.config.runnerGroupId,
       runnerName: vmName,
-      labels: [this.config.requiredLabel]
+      labels: ['self-hosted', 'linux', 'x64', this.config.requiredLabel]
     });
     const jitSecretId = await this.cloud.createJitSecret(job.id, jit.encoded_jit_config);
     const resources = { vmName, jitSecretId, runnerId: String(jit.runner.id) };
