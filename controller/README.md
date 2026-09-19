@@ -4,6 +4,9 @@ This Cloud Run service turns trusted GitHub `workflow_job` events into one-job
 Compute Engine runners. GitHub remains the job queue. Firestore stores a small
 controller state machine and caps active VMs at two.
 
+`GET /readyz` is the public readiness probe. GitHub sends signed events to
+`POST /github`; unsigned requests receive `401`.
+
 ## Lifecycle
 
 1. GitHub sends a signed `workflow_job.queued` event to `/github`.
