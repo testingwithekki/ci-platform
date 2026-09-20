@@ -10,7 +10,7 @@ export function classifyWorkflowJob(payload, config) {
     labels.has('self-hosted') &&
     labels.has(config.requiredLabel) &&
     Number.isSafeInteger(job?.id) &&
-    Number.isSafeInteger(payload?.installation?.id);
+    payload?.installation?.id === config.appInstallationId;
 
   if (!valid) return { accepted: false, reason: 'event outside runner policy' };
   if (!['queued', 'completed'].includes(payload.action)) {

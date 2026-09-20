@@ -7,7 +7,8 @@ const config = {
   organizationId: 330211622,
   repositoryIds: new Set([1373784160]),
   allowedBranch: 'main',
-  requiredLabel: 'qa-platform-v2'
+  requiredLabel: 'qa-platform-v2',
+  appInstallationId: 88
 };
 
 function payload(overrides = {}) {
@@ -44,6 +45,12 @@ test('captures the assigned runner on completion', () => {
 test('rejects another repository even with matching labels', () => {
   const value = payload();
   value.repository.id = 999;
+  assert.equal(classifyWorkflowJob(value, config).accepted, false);
+});
+
+test('rejects another GitHub App installation', () => {
+  const value = payload();
+  value.installation.id = 99;
   assert.equal(classifyWorkflowJob(value, config).accepted, false);
 });
 

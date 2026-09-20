@@ -35,7 +35,7 @@ export class CloudResources {
 
   async createRunnerVm({ jobId, vmName, jitSecretId }) {
     const c = this.config;
-    const startup = `#!/bin/bash\nset -euo pipefail\ncurl -fsSL https://raw.githubusercontent.com/testingwithekki/ci-platform/main/runner-v2/jit-bootstrap.sh -o /tmp/jit-bootstrap.sh\nchmod 700 /tmp/jit-bootstrap.sh\nexec /tmp/jit-bootstrap.sh\n`;
+    const startup = `#!/bin/bash\nset -euo pipefail\ncurl -fsSL https://raw.githubusercontent.com/testingwithekki/ci-platform/${c.runnerBootstrapRef}/runner-v2/jit-bootstrap.sh -o /tmp/jit-bootstrap.sh\nchmod 700 /tmp/jit-bootstrap.sh\nexec /tmp/jit-bootstrap.sh\n`;
     const body = {
       name: vmName,
       machineType: `zones/${c.zone}/machineTypes/${c.machineType}`,

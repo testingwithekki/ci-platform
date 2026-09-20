@@ -5,3 +5,8 @@ github_repository_ids = {
   filter      = "1373784260"
   persistence = "1373784386"
 }
+
+# Required when deploy_controller=true. Pin runner bootstrap downloads to a
+# reviewed commit rather than the mutable main branch.
+runner_bootstrap_ref = "0000000000000000000000000000000000000000"
+github_app_installation_id = 0

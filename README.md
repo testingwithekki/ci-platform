@@ -1,6 +1,8 @@
 # CI platform
 
-This repository owns the shared Playwright workflow and the Google Cloud VM definition. Team repositories call `.github/workflows/playwright.yml`; they do not duplicate the test execution steps. The three small suites exercise [Playwright's TodoMVC demo](https://demo.playwright.dev/todomvc/).
+This repository owns two shared Playwright CI experiments. Team repositories
+call reusable workflows instead of duplicating test execution. The three small
+suites exercise [Playwright's TodoMVC demo](https://demo.playwright.dev/todomvc/).
 
 The runner must be registered at the **organization** level and carry the label `qa-playwright`. For the first milestone, run one runner on one VM. Each GitHub Actions runner processes one job at a time, so simultaneous team runs visibly queue.
 
@@ -10,6 +12,19 @@ Provisioning instructions are in [`infra/README.md`](infra/README.md).
 
 The [experiment log](EXPERIMENT.md) contains the live run links, queue measurements, failure artifact evidence, and teardown record.
 
-The [QA platform v2 design](docs/qa-platform-v2.md) describes the next demonstration: one-job runner VMs, a private Cloud Storage report bucket, two-job capacity limit, team-specific configuration, and cleanup checks. It is a design; those resources have not been deployed.
+The [QA platform v2 design](docs/qa-platform-v2.md) is deployed in the existing
+`testingwithekki` project. It uses signed GitHub App webhooks, authenticated
+Cloud Tasks, Firestore capacity control, JIT one-job Compute Engine runners,
+GitHub OIDC, and private team report buckets. The platform accepts at most two
+jobs concurrently and normally deletes runner VMs and JIT secrets after a job.
 
-The lab VM and Google Cloud project were disposed on 2026-09-17. The organization runner record remains offline at the owner's request. The three team workflows are disabled until a new trusted runner is provisioned; past Actions runs remain visible.
+Publication evidence and operational documentation:
+
+- [Threat model](docs/threat-model.md)
+- [Controller state machine](docs/state-machine.md)
+- [Operator runbook](docs/runbook.md)
+- [Acceptance test](docs/acceptance-test.md)
+
+The v1 lab VM and its project were disposed on 2026-09-17. Its organization
+runner record remains offline at the owner's request. V2 reuses a separate,
+existing project and its caller workflows remain manual for this public lab.

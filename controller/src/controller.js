@@ -4,17 +4,22 @@ export class RunnerController {
     this.state = state;
     this.github = github;
     this.cloud = cloud;
-    this.logger = logger;
+    this.logger = {
+      info: typeof logger.info === 'function' ? logger.info.bind(logger) : () => {},
+      error: typeof logger.error === 'function' ? logger.error.bind(logger) : () => {}
+    };
   }
 
   async queued(job) {
-    await this.state.enqueue(job);
+    const created = await this.state.enqueue(job);
+    this.logger.info('Workflow job queued', { jobId: job.id, runId: job.runId, repository: job.repository, duplicate: !created });
     await this.drain();
   }
 
   async completed(job) {
     const resources = await this.state.completeExecution(job.id, job.runnerId);
     if (resources && !this.config.preserveRunners) await this.cloud.cleanup(resources);
+    this.logger.info('Workflow job completed', { jobId: job.id, runId: job.runId, runnerId: job.runnerId, preserved: this.config.preserveRunners });
     await this.drain();
   }
 
@@ -23,6 +28,7 @@ export class RunnerController {
       const job = await this.state.reserveNext();
       if (!job) return;
       try {
+        this.logger.info('Runner provisioning started', { jobId: job.id, repository: job.repository });
         await this.#provision(job);
       } catch (error) {
         this.logger.error('Runner provisioning failed', { jobId: job.id, error: String(error) });
@@ -59,6 +65,7 @@ export class RunnerController {
     try {
       await this.cloud.createRunnerVm({ jobId: job.id, vmName, jitSecretId });
       await this.state.markRunning(job.id, resources);
+      this.logger.info('Runner provisioning completed', { jobId: job.id, vmName, runnerId: resources.runnerId });
     } catch (error) {
       await this.cloud.cleanup(resources);
       throw error;
