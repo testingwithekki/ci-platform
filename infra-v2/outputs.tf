@@ -40,3 +40,11 @@ output "controller_url" {
   value       = var.deploy_controller ? google_cloud_run_v2_service.controller[0].uri : null
   description = "Webhook base URL after deploy_controller is enabled."
 }
+
+output "operations_metrics" {
+  value = {
+    controller_errors = google_logging_metric.controller_errors.name
+    runner_failures   = google_logging_metric.runner_failures.name
+  }
+  description = "Log-based metrics used by the QA platform runbook."
+}

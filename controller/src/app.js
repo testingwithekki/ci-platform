@@ -17,7 +17,7 @@ async function readBody(request, maxBytes = 1_000_000) {
   return Buffer.concat(chunks);
 }
 
-export function createHandler({ config, controller, webhookSecret, verifyReconciler = async () => false, logger = console }) {
+export function createHandler({ config, controller, dispatcher, webhookSecret, verifyReconciler = async () => false, verifyTask = async () => false, logger = console }) {
   return async (request, response) => {
     try {
       if (request.method === 'GET' && request.url === '/readyz') return reply(response, 200, { ok: true });
@@ -26,6 +26,16 @@ export function createHandler({ config, controller, webhookSecret, verifyReconci
         if (!(await verifyReconciler(request.headers.authorization))) return reply(response, 401, { error: 'unauthorized' });
         await controller.reconcile();
         return reply(response, 202, { accepted: true });
+      }
+
+      if (request.method === 'POST' && request.url === '/tasks') {
+        if (!(await verifyTask(request.headers.authorization))) return reply(response, 401, { error: 'unauthorized' });
+        const event = JSON.parse((await readBody(request)).toString('utf8'));
+        if (!['queued', 'completed'].includes(event?.action) || !event?.job?.id) {
+          return reply(response, 400, { error: 'invalid task' });
+        }
+        await controller[event.action](event.job);
+        return reply(response, 200, { processed: true, jobId: event.job.id });
       }
 
       if (request.method !== 'POST' || request.url !== '/github') return reply(response, 404, { error: 'not found' });
@@ -39,9 +49,11 @@ export function createHandler({ config, controller, webhookSecret, verifyReconci
 
       const decision = classifyWorkflowJob(JSON.parse(rawBody.toString('utf8')), config);
       if (!decision.accepted) return reply(response, 202, { ignored: true, reason: decision.reason });
-      if (decision.action === 'queued') await controller.queued(decision.job);
-      else await controller.completed(decision.job);
-      return reply(response, 202, { accepted: true, jobId: decision.job.id });
+      const deliveryId = request.headers['x-github-delivery'];
+      if (typeof deliveryId !== 'string' || !deliveryId) return reply(response, 400, { error: 'missing delivery id' });
+      const created = await dispatcher.enqueue({ action: decision.action, job: decision.job }, deliveryId);
+      logger.info('GitHub event accepted', { deliveryId, action: decision.action, jobId: decision.job.id, duplicate: !created });
+      return reply(response, 202, { accepted: true, duplicate: !created, jobId: decision.job.id });
     } catch (error) {
       logger.error('Request failed', { error: String(error) });
       return reply(response, 500, { error: 'internal error' });

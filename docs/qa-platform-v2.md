@@ -1,6 +1,9 @@
 # QA platform v2: short-lived runners and private reports
 
-Status: implementation in progress. The earlier single-VM experiment is complete and its VM and project were destroyed. The v2 workflows and report-storage Terraform are merged to `main`, and the restricted `qa-platform-v2` runner group is created. Cloud deployment and end-to-end verification are still pending.
+Status: deployed and verified. The earlier single-VM experiment is complete and
+its VM and project were destroyed. V2 runs in the existing `testingwithekki`
+project with signed GitHub App webhooks, Firestore capacity, Cloud Tasks retries,
+JIT one-job VMs, private report buckets, and a restricted runner group.
 
 ## Keep v1 and v2 separate
 
@@ -17,7 +20,10 @@ The completed experiment remains reproducible from its existing workflow and run
 
 The v1 workflows stay disabled. Start the v2 caller workflows with `workflow_dispatch` only; enable trusted `main` pushes after the end-to-end demo works. The new runner group allows only the three team repositories and jobs directly defined by `playwright-v2.yml`. The source repository does not need runner access. Keep v2's workflow reference and the group's selected-workflow reference in sync. During development they can target `main`; before calling the setup stable, pin a reviewed revision and update both references together.
 
-The v2 workflow files are separate from v1. The runner group admits only the three team repositories and the central v2 workflow on `main`; no v2 runner is registered yet. The callers remain manual while cloud resources and the disposable runner lifecycle are validated.
+The v2 workflow files are separate from v1. The runner group admits only the
+three team repositories and the central v2 workflow on `main`. JIT runners
+register only when an accepted job has reserved capacity. The callers remain
+manual because the repositories are public.
 
 ## Goal
 

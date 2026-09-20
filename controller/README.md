@@ -12,19 +12,22 @@ controller state machine and caps active VMs at two.
 1. GitHub sends a signed `workflow_job.queued` event to `/github`.
 2. The controller checks the organization ID, repository ID, branch, labels,
    installation ID, and HMAC signature.
-3. A Firestore transaction records the job and reserves one of two slots.
-4. A narrowly scoped GitHub App installation token requests an organization JIT
+3. The webhook creates an authenticated Cloud Task whose name is derived from
+   the GitHub delivery ID. Duplicate deliveries do not create duplicate work.
+4. The task endpoint records the job and reserves one of two slots in Firestore.
+5. A narrowly scoped GitHub App installation token requests an organization JIT
    runner configuration for runner group `qa-platform-v2`.
-5. The JIT configuration is stored in a unique Secret Manager secret. Only the
+6. The JIT configuration is stored in a unique Secret Manager secret. Only the
    disposable runner service account can read it.
-6. The controller creates an `e2-standard-2` VM. Its public bootstrap reads that
+7. The controller creates an `e2-standard-2` VM. Its commit-pinned bootstrap reads that
    one secret, starts the pinned runner with `--jitconfig`, and runs one job.
-7. GitHub sends `workflow_job.completed`. The controller releases the slot,
+8. GitHub sends `workflow_job.completed`. A task releases the slot,
    deletes any remaining VM and JIT secret, then starts the oldest pending job.
-8. Cloud Scheduler calls `/reconcile` with Google OIDC every five minutes to
+9. Cloud Scheduler calls `/reconcile` with Google OIDC every five minutes to
    recover leases older than 55 minutes.
 
-Compute Engine also deletes each VM after 45 minutes. The runner shuts itself
+Cloud Tasks retries transient provisioning and cleanup failures. Compute Engine
+also deletes each VM after 45 minutes. The runner shuts itself
 down after its one job. These independent cleanup paths make leaked capacity
 less likely.
 
@@ -44,6 +47,10 @@ Install the app only on the three team repositories. Give it:
 
 The private key and webhook secret belong in Secret Manager. Never commit them
 or place them in VM metadata.
+
+The `/tasks` and `/reconcile` routes require Google OIDC tokens from their
+dedicated service accounts. Runner bootstrap and diagnostic logs are written to
+Cloud Logging under `qa-v2-runner`.
 
 ## Local checks
 

@@ -52,3 +52,20 @@ variable "preserve_runners" {
   type        = bool
   default     = false
 }
+
+variable "github_app_installation_id" {
+  description = "Numeric installation ID for the GitHub App installed on the three team repositories."
+  type        = number
+  default     = null
+}
+
+variable "runner_bootstrap_ref" {
+  description = "Full Git commit SHA used to download the immutable runner bootstrap."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.runner_bootstrap_ref == null || can(regex("^[0-9a-f]{40}$", var.runner_bootstrap_ref))
+    error_message = "runner_bootstrap_ref must be a full lowercase 40-character Git commit SHA."
+  }
+}

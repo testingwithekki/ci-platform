@@ -35,6 +35,12 @@ resource "google_service_account" "runner" {
   depends_on = [google_project_service.iam]
 }
 
+resource "google_project_iam_member" "runner_log_writer" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.runner.email}"
+}
+
 resource "google_secret_manager_secret" "registration" {
   project   = var.project_id
   secret_id = "qa-v2-runner-registration"

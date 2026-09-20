@@ -4,7 +4,42 @@ set -euo pipefail
 # Public bootstrap for controller-created JIT runners. No GitHub credential is
 # embedded in this file or in instance metadata.
 exec > >(tee -a /var/log/qa-v2-jit-runner.log) 2>&1
-trap 'shutdown -h now' EXIT
+
+upload_diagnostics() {
+  local exit_code="$1"
+  local metadata='http://metadata.google.internal/computeMetadata/v1'
+  local metadata_header='Metadata-Flavor: Google'
+  local project_id instance_id zone access_token message payload
+  project_id="$(curl --fail --silent --header "$metadata_header" "${metadata}/project/project-id")"
+  instance_id="$(curl --fail --silent --header "$metadata_header" "${metadata}/instance/id")"
+  zone="$(curl --fail --silent --header "$metadata_header" "${metadata}/instance/zone")"
+  zone="${zone##*/}"
+  access_token="$(curl --fail --silent --header "$metadata_header" "${metadata}/instance/service-accounts/default/token" | jq -r '.access_token')"
+  message="$(tail -c 180000 /var/log/qa-v2-jit-runner.log /opt/actions-runner/_diag/*.log 2>/dev/null || true)"
+  payload="$(jq -n \
+    --arg log_name "projects/${project_id}/logs/qa-v2-runner" \
+    --arg project_id "$project_id" \
+    --arg instance_id "$instance_id" \
+    --arg zone "$zone" \
+    --arg message "$message" \
+    --argjson exit_code "$exit_code" \
+    '{logName:$log_name,resource:{type:"gce_instance",labels:{project_id:$project_id,instance_id:$instance_id,zone:$zone}},entries:[{severity:(if $exit_code == 0 then "INFO" else "ERROR" end),jsonPayload:{message:$message,exitCode:$exit_code}}]}')"
+  curl --fail --silent --show-error \
+    -H "Authorization: Bearer ${access_token}" \
+    -H 'Content-Type: application/json' \
+    -X POST -d "$payload" \
+    'https://logging.googleapis.com/v2/entries:write' >/dev/null
+}
+
+finish() {
+  local exit_code="$?"
+  trap - EXIT
+  upload_diagnostics "$exit_code" || true
+  shutdown -h now
+  exit "$exit_code"
+}
+
+trap finish EXIT
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
