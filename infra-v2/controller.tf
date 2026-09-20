@@ -303,6 +303,10 @@ resource "google_cloud_run_v2_service" "controller" {
   }
 
   lifecycle {
+    # Cloud Run returns a zero-valued service-level scaling block even when it
+    # is unset. Revision scaling is managed in template.scaling above.
+    ignore_changes = [scaling]
+
     precondition {
       condition     = !var.deploy_controller || (var.controller_image != null && var.github_app_id != null && var.github_app_installation_id != null && var.runner_bootstrap_ref != null)
       error_message = "controller_image, github_app_id, github_app_installation_id, and runner_bootstrap_ref are required when deploy_controller is true."
